@@ -7,7 +7,7 @@ system_system_ip:
 system_site_id: 
 vpn0_wan1_if_name:
 vpn0_wan1_if_description:
-vpn512_mgmt_if_name:
 vpn1_data_if_name:
 vpn1_data_if_description:
 vpn1_data_if_ipv4_address:
+vpn512_mgmt_if_name:
