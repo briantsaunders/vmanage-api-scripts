@@ -9,3 +9,13 @@ This repo contains example scripts for interacting with the Cisco vManage API in
 ```shell
 pip install -r requirements.txt
 ```
+
+## Scripts
+
+### get_device_status.py
+
+Retrieves device status from vManage.
+
+```shell
+python get_device_status.py --vmanage_host x.x.x.x --vmanage_username username --vmanage_password password --device_hostname device
+```
