@@ -1,0 +1,13 @@
+---
+# Run the get_device_templates_inputs.py script to get template inputs.  This is
+# an example of the template input variable names for a template that I have on my
+# vManage.
+system_host_name: 
+system_system_ip:
+system_site_id: 
+vpn0_wan1_if_name:
+vpn0_wan1_if_description:
+vpn512_mgmt_if_name:
+vpn1_data_if_name:
+vpn1_data_if_description:
+vpn1_data_if_ipv4_address:
