@@ -45,7 +45,7 @@ If your template requires inputs you need to provide a yaml file defining those 
 Below is an example of how to run.  Update the args to match your environment.
 
 ```shell
-python attach_device_template.py.py \
+python attach_device_template.py \
 --vmanage_host x.x.x.x \
 --vmanage_username username \
 --vmanage_password password \
