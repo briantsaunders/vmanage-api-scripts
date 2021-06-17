@@ -21,6 +21,15 @@ def main(args):
         username=args.vmanage_username,
         password=args.vmanage_password,
     )
+    # Verify device uuid exists
+    device_lib = Device(vmanage_session, args.vmanage_host)
+    device_list = device_lib.get_device_list(category="vedges")
+    device_uuid_found = False
+    for device in device_list:
+        if device["uuid"] == args.device_uuid:
+            device_uuid_found = True
+    if not device_uuid_found:
+        sys.exit(f"device {args.device_uuid} not found, exiting.")
     device_templates_lib = DeviceTemplates(vmanage_session, args.vmanage_host)
     # Verify that the template exists and get the template id.
     device_template = device_templates_lib.get_device_template_dict(

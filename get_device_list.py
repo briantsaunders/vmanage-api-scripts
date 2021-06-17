@@ -19,8 +19,6 @@ def main(args):
         password=args.vmanage_password,
     )
     device_lib = Device(vmanage_session, args.vmanage_host)
-    # Any key within the device status response can be used for the query.
-    # Here we are using the host-name.
     device_list = device_lib.get_device_list(category="vedges")
     if not device_list:
         sys.exit(f"No devices found.")
