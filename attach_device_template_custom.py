@@ -2,6 +2,7 @@
 
 # import std libs
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -9,6 +10,8 @@ from pathlib import Path
 import yaml
 from vmanage.api.device import Device
 from vmanage.api.device_templates import DeviceTemplates
+from vmanage.api.http_methods import HttpMethods
+from vmanage.api.utilities import Utilities
 
 # import app libs
 from utils import vmanage_login
@@ -20,12 +23,15 @@ def main(args):
         username=args.vmanage_username,
         password=args.vmanage_password,
     )
+    # Verify device uuid exists
     device_lib = Device(vmanage_session, args.vmanage_host)
-    # Any key within the device status response can be used for the query.
-    # Here we are using the host-name.
-    device_status = device_lib.get_device_status(args.device_hostname, key="host-name")
-    if not device_status:
-        sys.exit(f"device {args.device_hostname} not found, exiting.")
+    device_list = device_lib.get_device_list(category="vedges")
+    device_uuid_found = False
+    for device in device_list:
+        if device["uuid"] == args.device_uuid:
+            device_uuid_found = True
+    if not device_uuid_found:
+        sys.exit(f"device {args.device_uuid} not found, exiting.")
     device_templates_lib = DeviceTemplates(vmanage_session, args.vmanage_host)
     # Verify that the template exists and get the template id.
     device_template = device_templates_lib.get_device_template_dict(
@@ -41,16 +47,37 @@ def main(args):
         )
     with open(device_template_inputs_file) as file:
         device_template_inputs = yaml.safe_load(file)
-    payload = {
-        device_status["uuid"]: {
-            "host_name": args.device_hostname,
-            "system_ip": device_status["system-ip"],
-            "site_id": device_status["site-id"],
-            "variables": device_template_inputs,
-        }
+    device_template_variables = {
+        "csv-status": "complete",
+        "csv-deviceId": args.device_uuid,
+        "csv-deviceIP": device_template_inputs["//system/system-ip"],
+        "csv-host-name": device_template_inputs["//system/host-name"]
     }
-    r = device_templates_lib.attach_to_template(device_template_id, "template", payload)
-    print(r)
+    # add device template inputs to device template variables
+    for k,v in device_template_inputs.items():
+        device_template_variables[k] = v
+    # most append device template vars to list
+    # could append multiple if wanting to attach more than one device
+    # to the same template
+    device_template_variables_list = [device_template_variables]
+    payload = {
+        "deviceTemplateList": [{
+            "templateId": device_template_id,
+            "device": device_template_variables_list,
+            "isEdited": False,
+            "isMasterEdited": False
+        }]
+    }
+    base_url = f"https://{args.vmanage_host}:443/dataservice/"
+    url = f"{base_url}template/device/config/attachfeature"
+    utils = Utilities(vmanage_session, args.vmanage_host)
+    response = HttpMethods(vmanage_session, url).request('POST', payload=json.dumps(payload))
+    if 'json' in response and 'id' in response['json']:
+        action_id = response['json']['id']
+        utils.waitfor_action_completion(action_id)
+    else:
+        raise Exception('Did not get action ID after attaching device to template.')
+    print(action_id)
 
 
 if __name__ == "__main__":
@@ -65,7 +92,7 @@ if __name__ == "__main__":
         "--vmanage_password", required=True, action="store", help="vmanage password"
     )
     parser.add_argument(
-        "--device_hostname", required=True, action="store", help="vmanage device"
+        "--device_uuid", required=True, action="store", help="vmanage device uuid"
     )
     parser.add_argument(
         "--device_template_name",

@@ -9,7 +9,6 @@ from pathlib import Path
 import yaml
 from vmanage.api.device import Device
 from vmanage.api.device_templates import DeviceTemplates
-from yaml.tokens import DirectiveToken
 
 # import app libs
 from utils import vmanage_login
